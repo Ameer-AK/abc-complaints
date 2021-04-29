@@ -1,0 +1,16 @@
+{
+  "name": "abc-complaints",
+  "version": "1.0.0",
+  "description": "Complaint Management Portal for ABC",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ameer Adhami",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.6",
+    "ejs-mate": "^3.0.0",
+    "express": "^4.17.1"
+  }
+}
