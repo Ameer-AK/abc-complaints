@@ -1,1 +1,22 @@
-<h1>Welcome to ABC Complaint Management Portal</h1>
+<% layout('boilerplate') %>
+    <div class="d-flex flex-column vh-100 text-center text-white"
+        style="background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1556745753-b2904692b3cd?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1932&q=80'); height: 100vh; background-position: center;">
+        <main class="m-5">
+            <h1>ABC Complaint Management Portal</h1>
+            <p class="lead mt-5">Welcome to the ABC Complaint Management Portal
+                <% if(!currentUser) { %>
+                    <br> Please login or regitser to submit or view a complaint.
+                    <% } %>
+            </p>
+            <div class="mt-5">
+                <%if(!currentUser) {%>
+                    <a href="/login" class="btn btn-lg btn-secondary text-dark font-weight-bold bg-white">Login</a>
+                    <a href="/register"
+                        class="btn btn-lg btn-secondary text-dark font-weight-bold bg-white">Register</a>
+                    <% } else { %>
+                        <a href="/complaints"
+                            class="btn btn-lg btn-secondary text-dark font-weight-bold bg-white">Complaints</a>
+                        <% } %>
+            </div>
+        </main>
+    </div>

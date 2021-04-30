@@ -13,6 +13,7 @@ const MongoStore = require('connect-mongo');
 const User = require('./models/user');
 const Users = require('./fakedb/users')
 const Complaints = require('./fakedb/complaints')
+const flash = require('connect-flash');
 
 
 //DB Connection
@@ -69,6 +70,8 @@ const sessionConfig = {
 }
 app.use(session(sessionConfig));
 
+app.use(flash());
+
 //Passport Auth Setup
 app.use(passport.initialize());
 app.use(passport.session());
@@ -78,24 +81,41 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 
+//Add locals to for global access
+app.use((req, res, next) => {
+    res.locals.currentUser = req.user;
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+})
+
+
 //Routes
 app.get('/', (req, res) => {
     res.render('home');
     console.log(mongoose.connection.readyState);
 });
 
-// app.get('/users', (req, res) => {
-//     res.send(Users.getAll());
-// });
 
 app.get('/register', (req, res) => {
-    res.send('welcome to register page!');
-    //TODO render register page
+    res.render('users/register');
 })
 
-app.post('/register', (req, res) => {
-    res.send('registered!');
+app.post('/register', async (req, res) => {
     //TODO register user
+    try {
+        const { username, email, password, first, last, age, gender } = req.body
+        const user = new User({ email, username, age, gender, first, last });
+        const registered = await User.register(user, password);
+        req.login(registered, (err) => {
+            if (err) return next(err);
+            req.flash('success', 'Thank you for registering.')
+            res.redirect('/complaints');
+        })
+    } catch (e) {
+        req.flash('error', e.message)
+        res.redirect('/register');
+    }
 })
 
 app.get('/login', (req, res) => {
@@ -104,13 +124,19 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-    res.send('logged in!');
     //TODO: log user in
+    passport.authenticate('local', { failureFlash: true, failureRedirect: '/login' });
+    req.flash('success', 'You have successfully logged in.');
+    redirectURL = req.session.redirectURL || '/complaints';
+    delete req.session.redirectURL;
+    res.redirect(redirectURL);
 })
 
-app.get('/logout', (req, res) => {
-    res.send('logged out!');
+app.post('/logout', (req, res) => {
     //TODO: log user out
+    req.logout();
+    req.flash('success', 'You have successfully logged out.')
+    res.redirect('/');
 })
 
 app.get('/complaints', (req, res) => {

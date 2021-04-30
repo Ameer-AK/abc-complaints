@@ -7,6 +7,26 @@ const UserSchema = new Schema({
         type: String,
         required: true,
         unique: true
+    },
+    first: {
+        type: String,
+        required: true
+    },
+    last: {
+        type: String,
+        required: true
+    },
+    age: {
+        type: Number,
+        required: true
+    },
+    gender: {
+        type: String,
+        enum: ['MALE', 'FEMALE']
+    },
+    admin: {
+        type: Boolean,
+        default: false
     }
 });
 
