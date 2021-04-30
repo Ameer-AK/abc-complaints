@@ -1,0 +1,30 @@
+<% layout('boilerplate') %>
+
+    <div class="container d-flex justify-content-center align-items-center mt-5">
+        <div class="row w-75 d-flex flex-column">
+            <div class="col-xl-6 offset-xl-3">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Login</h5>
+                        <form action="/login" method="POST" class="validated-form">
+                            <div class="mb-3">
+                                <label class="form-label" for="username">Username</label>
+                                <input class="form-control" type="text" id="username" name="username" required
+                                    autofocus>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="password">Password</label>
+                                <input class="form-control" type="password" id="password" name="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <button class="btn btn-success btn-block">Login</button>
+                            </div>
+                        </form>
+                        <div class="mb-3">
+                            <a href="/register" class="btn btn-info btn-block">New user? Regiser</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

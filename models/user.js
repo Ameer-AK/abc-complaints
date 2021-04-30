@@ -22,7 +22,7 @@ const UserSchema = new Schema({
     },
     gender: {
         type: String,
-        enum: ['MALE', 'FEMALE']
+        enum: ['Male', 'Female']
     },
     admin: {
         type: Boolean,

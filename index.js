@@ -14,7 +14,7 @@ const User = require('./models/user');
 const Users = require('./fakedb/users')
 const Complaints = require('./fakedb/complaints')
 const flash = require('connect-flash');
-
+const { isLoggedIn } = require('./middleware')
 
 //DB Connection
 const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/abc-complaints';
@@ -57,13 +57,13 @@ store.on("error", function (e) {
 //TODO this
 const sessionConfig = {
     store,
-    name: 'xzr',
     secret,
     resave: false,
     saveUninitialized: true,
+    // secure: true,
     cookie: {
         httpOnly: true,
-        // secure: true,
+        secure: true,
         expires: Date.now() + 1000 * 60 * 60 * 24 * 7 * 1,
         maxAge: 1000 * 60 * 60 * 24 * 7 * 1
     }
@@ -93,7 +93,6 @@ app.use((req, res, next) => {
 //Routes
 app.get('/', (req, res) => {
     res.render('home');
-    console.log(mongoose.connection.readyState);
 });
 
 
@@ -109,7 +108,7 @@ app.post('/register', async (req, res) => {
         const registered = await User.register(user, password);
         req.login(registered, (err) => {
             if (err) return next(err);
-            req.flash('success', 'Thank you for registering.')
+            req.flash('success', 'You have successfully registered.')
             res.redirect('/complaints');
         })
     } catch (e) {
@@ -119,37 +118,28 @@ app.post('/register', async (req, res) => {
 })
 
 app.get('/login', (req, res) => {
-    res.send('welcome to login page');
-    //TODO: render login page
+    res.render('users/login');
 });
 
-app.post('/login', (req, res) => {
-    //TODO: log user in
-    passport.authenticate('local', { failureFlash: true, failureRedirect: '/login' });
+app.post('/login', passport.authenticate('local', { session: true, failureFlash: true, failureRedirect: '/login' }), (req, res) => {
     req.flash('success', 'You have successfully logged in.');
     redirectURL = req.session.redirectURL || '/complaints';
     delete req.session.redirectURL;
     res.redirect(redirectURL);
 })
 
-app.post('/logout', (req, res) => {
-    //TODO: log user out
+app.get('/logout', (req, res) => {
     req.logout();
     req.flash('success', 'You have successfully logged out.')
     res.redirect('/');
 })
 
-app.get('/complaints', (req, res) => {
-    const userId = 123; //TODO: GET FROM REQ.USER
-    const admin = true; //TODO: GET IF ADMIN FROM REQ.USER
-    if (admin) {
-        res.send(Complaints.getAll());
-    } else {
-        res.send(Complaints.getByAuthorId(userId));
-    }
+app.get('/complaints/add', isLoggedIn, (req, res) => {
+    res.send('complaint add page');
+    //TODO render add complaint page
 });
 
-app.post('/complaints', (req, res) => {
+app.post('/complaints', isLoggedIn, (req, res) => {
     const userId = 123; //TODO: GET FROM REQ.USER
     const complaint = req.body.complaint;
     complaint.author_id = userId;
@@ -157,18 +147,19 @@ app.post('/complaints', (req, res) => {
     res.send(newComplaint);
 })
 
-app.get('/complaints/add', (req, res) => {
-    res.send('complaint add page');
-    //TODO render add complaint page
+app.get('/complaints', isLoggedIn, (req, res) => {
+    const userId = 123; //TODO: GET FROM REQ.USER
+    const admin = true; //TODO: GET IF ADMIN FROM REQ.USER
+    res.render('complaints');
 });
 
-app.get('/complaints/:id', (req, res) => {
+app.get('/complaints/:id', isLoggedIn, (req, res) => {
     const { id } = req.params;
     res.send(Complaints.getById(id));
     //TODO complaint show page (status can be edited by admin)
 });
 
-app.put('/complaints/:id', (req, res) => {
+app.put('/complaints/:id', isLoggedIn, (req, res) => {
     res.send('complaint status edited!');
     //TODO change complaint status 
 });
