@@ -36,9 +36,34 @@ app.get('/', (req, res) => {
     console.log(mongoose.connection.readyState);
 });
 
-app.get('/users', (req, res) => {
-    res.send(Users.getAll());
+// app.get('/users', (req, res) => {
+//     res.send(Users.getAll());
+// });
+
+app.get('/register', (req, res) => {
+    res.send('welcome to register page!');
+    //TODO render register page
+})
+
+app.post('/register', (req, res) => {
+    res.send('registered!');
+    //TODO register user
+})
+
+app.get('/login', (req, res) => {
+    res.send('welcome to login page');
+    //TODO: render login page
 });
+
+app.post('/login', (req, res) => {
+    res.send('logged in!');
+    //TODO: log user in
+})
+
+app.get('/logout', (req, res) => {
+    res.send('logged out!');
+    //TODO: log user out
+})
 
 app.get('/complaints', (req, res) => {
     const userId = 123; //TODO: GET FROM REQ.USER
@@ -58,12 +83,20 @@ app.post('/complaints', (req, res) => {
     res.send(newComplaint);
 })
 
-app.get('/complaints/:id', (req, res) => {
-    const {id} = req.params;
-    res.send(Complaints.getById(id));
+app.get('/complaints/add', (req, res) => {
+    res.send('complaint add page');
+    //TODO render add complaint page
 });
 
+app.get('/complaints/:id', (req, res) => {
+    const { id } = req.params;
+    res.send(Complaints.getById(id));
+    //TODO complaint show page (status can be edited by admin)
+});
 
-
+app.put('/complaints/:id', (req, res) => {
+    res.send('complaint status edited!');
+    //TODO change complaint status 
+});
 
 app.listen(3000, () => console.log(`Listening on port 3000...`));
