@@ -14,7 +14,7 @@ module.exports.isComplaintAuthorOrAdmin = async (req, res, next) => {
     const { _id: userId, admin } = req.user;
     const complaint = await Complaint.findById(complaintId);
     if (!complaint.author.equals(userId) && !admin) {
-        req.flash('error', 'You do not have to view this page.');
+        req.flash('error', 'You do not have the rights to view this page.');
         return res.redirect('/complaints');
     }
     next();
