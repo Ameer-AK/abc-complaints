@@ -27,3 +27,9 @@ module.exports.isAdmin = (req, res, next) => {
     }
     next();
 }
+
+module.exports.catchAndPassAsyncError = func => {
+    return (req, res, next) => {
+        func(req, res, next).catch(next);
+    }
+}

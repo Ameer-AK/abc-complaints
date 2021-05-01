@@ -14,8 +14,7 @@ const MongoStore = require('connect-mongo');
 const User = require('./models/user');
 const Complaint = require('./models/complaint');
 const flash = require('connect-flash');
-const { isAuthenticated, isComplaintAuthorOrAdmin, isAdmin } = require('./middleware');
-const user = require('./models/user');
+const { isAuthenticated, isComplaintAuthorOrAdmin, isAdmin, catchAndPassAsyncError } = require('./middleware');
 
 //DB Connection
 const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/abc-complaints';
@@ -44,7 +43,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 //Session Setup
-const secret = process.env.SECRET || 'thisshouldbeabettersecret';
+const secret = process.env.SECRET || 'secret123';
 
 const store = MongoStore.create({
     mongoUrl: dbUrl,
@@ -62,10 +61,8 @@ const sessionConfig = {
     secret,
     resave: false,
     saveUninitialized: true,
-    // secure: true,
     cookie: {
         httpOnly: true,
-        secure: true,
         expires: Date.now() + 1000 * 60 * 60 * 24 * 7 * 1,
         maxAge: 1000 * 60 * 60 * 24 * 7 * 1
     }
@@ -115,7 +112,7 @@ app.post('/register', async (req, res) => {
         req.flash('error', e.message)
         res.redirect('/register');
     }
-})
+});
 
 app.get('/login', (req, res) => {
     res.render('users/login');
@@ -126,45 +123,53 @@ app.post('/login', passport.authenticate('local', { session: true, failureFlash:
     redirectURL = req.session.redirectURL || '/complaints';
     delete req.session.redirectURL;
     res.redirect(redirectURL);
-})
+});
 
 app.get('/logout', (req, res) => {
     req.logout();
     req.flash('success', 'You have successfully logged out.');
     res.redirect('/');
-})
+});
 
 app.get('/complaints/add', isAuthenticated, (req, res) => {
-    //TODO render add complaint page
     res.render('./complaints/add');
 });
 
-app.post('/complaints', isAuthenticated, async (req, res) => {
+app.post('/complaints', catchAndPassAsyncError(async (req, res) => {
     const complaint = new Complaint(req.body.complaint);
     complaint.author = req.user._id;
     await complaint.save();
     req.flash('success', 'Your complaint has been successfully submitted.');
     res.redirect(`/complaints/${complaint._id}`);
-})
+}));
 
-app.get('/complaints', isAuthenticated, async (req, res) => {
+app.get('/complaints', isAuthenticated, catchAndPassAsyncError(async (req, res) => {
     const { admin, id } = req.user;
     const complaints = admin ? await Complaint.find({}).populate('author') : await Complaint.find({ author: id }).populate('author');
     res.render('complaints', { complaints });
-});
+}));
 
-app.get('/complaints/:id', isAuthenticated, isComplaintAuthorOrAdmin, async (req, res) => {
+app.get('/complaints/:id', isAuthenticated, catchAndPassAsyncError(isComplaintAuthorOrAdmin), catchAndPassAsyncError(async (req, res) => {
     const { id } = req.params;
     const complaint = await Complaint.findById(id).populate('author');
     res.render('./complaints/show', { complaint });
-});
+}));
 
-app.put('/complaints/:id', isAuthenticated, isAdmin, async (req, res) => {
+app.put('/complaints/:id', isAuthenticated, isAdmin, catchAndPassAsyncError(async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     await Complaint.findByIdAndUpdate(id, { status: status });
+    // req.flash('success', 'Status successfully changed.')
     res.redirect(`/complaints/${id}`);
-});
+}));
 
+app.all('*', (req, res, next) => {
+    res.status(404).render('error', { statusCode: 404, message: 'Page not found.' });
+})
+
+app.use((err, req, res, next) => {
+    console.log(err);
+    res.status(500).render('error', { statusCode: 500, message: 'Something went wrong.' });
+});
 
 app.listen(3000, () => console.log(`Listening on port 3000...`));
