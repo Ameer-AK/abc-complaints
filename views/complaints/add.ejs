@@ -1,0 +1,35 @@
+<% layout('boilerplate') %>
+
+    <h1 class="text-center mx-auto my-5">Submit A New Complaint</h1>
+    <div class="col-6 offset-3">
+        <div class="card shadow">
+            <div class="card-body">
+                <form action="/complaints" method="POST">
+                    <div class=" mb-3">
+                        <label class="form-label" for="title">Title</label>
+                        <input class="form-control" type="text" id="title" name="complaint[title]" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="department">Department</label>
+                        <select class="form-control" id="department" name="complaint[department]" required>
+                            <option value="Sales">Sales</option>
+                            <option value="Accounting">Accounting</option>
+                            <option value="Management">Management</option>
+                            <option value="Customer Support">Customer Support</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="description">Description</label>
+                        <textarea class="form-control" type="text" id="description" name="complaint[description]"
+                            required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-success btn-block">Submit Complaint</button>
+                    </div>
+                </form>
+                <form action="/complaints">
+                    <button class="btn btn-danger btn-block">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
