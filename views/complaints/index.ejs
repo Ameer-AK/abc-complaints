@@ -1,3 +1,65 @@
 <% layout('boilerplate') %>
 
-<h1>COMPLAINTS INDEX PAGE!</h1>
+    <div class="d-flex flex-column align-items-center">
+        <h1 class="text-center mt-3"> All Complaints</h1>
+        <% if(!complaints.length) { %>
+            <h4 class="mt-5">No Complaints Submitted</h4>
+            <% } %>
+                <% if(!currentUser.admin) { %>
+                    <a href="/complaints/add" class="btn btn-success my-5">Submit New Complaint</a>
+                    <% } %>
+    </div>
+    <% if(complaints.length) { %>
+        <div class="d-flex flex-column align-items-center mx-5">
+            <div class="card my-3 w-<%= currentUser.admin ? 100 : 75 %> mx-5">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-3 font-weight-bold">
+                                Title
+                            </div>
+                            <% if (currentUser.admin) { %>
+                                <div class="col-3 font-weight-bold">
+                                    Submitted By
+                                </div>
+                                <% } %>
+                                    <div class="col-3 font-weight-bold">
+                                        Submitted on
+                                    </div>
+                                    <div class="col-<%= currentUser.admin ? 2 : 3 %>   font-weight-bold">
+                                        Status
+                                    </div>
+                                    <div class="col-<%= currentUser.admin ? 1 : 3 %>   font-weight-bold">
+                                    </div>
+                        </div>
+                    </li>
+                    <% for (let complaint of complaints) { %>
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col-3">
+                                    <%= complaint.title %>
+                                </div>
+                                <% if (currentUser.admin) { %>
+                                    <div class="col-3">
+                                        <%= complaint.author.first %>
+                                            <%= complaint.author.last %>
+                                    </div>
+                                    <% } %>
+                                        <div class="col-3">
+                                            1/5/2021
+                                        </div>
+                                        <div class="col-<%= currentUser.admin ? 2 : 3 %>">
+                                            <%= complaint.status %>
+                                        </div>
+                                        <div class="col-<%= currentUser.admin ? 1 : 3 %>">
+                                            <a href="/complaints/<%= complaint._id %>"
+                                                class="btn btn-outline-primary btn-sm">View</a>
+                                        </div>
+                            </div>
+                        </li>
+
+                        <% } %>
+                </ul>
+            </div>
+        </div>
+        <% } %>

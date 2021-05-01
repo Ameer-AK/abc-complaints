@@ -8,13 +8,14 @@ const ejsMate = require('ejs-mate');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const session = require('express-session');
+const methodOverride = require('method-override');
 const path = require('path');
 const MongoStore = require('connect-mongo');
 const User = require('./models/user');
-const Users = require('./fakedb/users')
-const Complaints = require('./fakedb/complaints')
+const Complaint = require('./models/complaint');
 const flash = require('connect-flash');
-const { isLoggedIn } = require('./middleware')
+const { isAuthenticated, isComplaintAuthorOrAdmin, isAdmin } = require('./middleware');
+const user = require('./models/user');
 
 //DB Connection
 const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/abc-complaints';
@@ -38,6 +39,7 @@ app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+app.use(methodOverride("_method"));
 app.use(express.urlencoded({ extended: true }));
 
 
@@ -95,13 +97,11 @@ app.get('/', (req, res) => {
     res.render('home');
 });
 
-
 app.get('/register', (req, res) => {
     res.render('users/register');
 })
 
 app.post('/register', async (req, res) => {
-    //TODO register user
     try {
         const { username, email, password, first, last, age, gender } = req.body
         const user = new User({ email, username, age, gender, first, last });
@@ -130,38 +130,41 @@ app.post('/login', passport.authenticate('local', { session: true, failureFlash:
 
 app.get('/logout', (req, res) => {
     req.logout();
-    req.flash('success', 'You have successfully logged out.')
+    req.flash('success', 'You have successfully logged out.');
     res.redirect('/');
 })
 
-app.get('/complaints/add', isLoggedIn, (req, res) => {
-    res.send('complaint add page');
+app.get('/complaints/add', isAuthenticated, (req, res) => {
     //TODO render add complaint page
+    res.render('./complaints/add');
 });
 
-app.post('/complaints', isLoggedIn, (req, res) => {
-    const userId = 123; //TODO: GET FROM REQ.USER
-    const complaint = req.body.complaint;
-    complaint.author_id = userId;
-    const newComplaint = Complaints.addComplaint(complaint);
-    res.send(newComplaint);
+app.post('/complaints', isAuthenticated, async (req, res) => {
+    const complaint = new Complaint(req.body.complaint);
+    complaint.author = req.user._id;
+    await complaint.save();
+    req.flash('success', 'Your complaint has been successfully submitted.');
+    res.redirect(`/complaints/${complaint._id}`);
 })
 
-app.get('/complaints', isLoggedIn, (req, res) => {
-    const userId = 123; //TODO: GET FROM REQ.USER
-    const admin = true; //TODO: GET IF ADMIN FROM REQ.USER
-    res.render('complaints');
+app.get('/complaints', isAuthenticated, async (req, res) => {
+    const { admin, id } = req.user;
+    const complaints = admin ? await Complaint.find({}).populate('author') : await Complaint.find({ author: id }).populate('author');
+    res.render('complaints', { complaints });
 });
 
-app.get('/complaints/:id', isLoggedIn, (req, res) => {
+app.get('/complaints/:id', isAuthenticated, isComplaintAuthorOrAdmin, async (req, res) => {
     const { id } = req.params;
-    res.send(Complaints.getById(id));
-    //TODO complaint show page (status can be edited by admin)
+    const complaint = await Complaint.findById(id).populate('author');
+    res.render('./complaints/show', { complaint });
 });
 
-app.put('/complaints/:id', isLoggedIn, (req, res) => {
-    res.send('complaint status edited!');
-    //TODO change complaint status 
+app.put('/complaints/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    await Complaint.findByIdAndUpdate(id, { status: status });
+    res.redirect(`/complaints/${id}`);
 });
+
 
 app.listen(3000, () => console.log(`Listening on port 3000...`));
