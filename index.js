@@ -103,10 +103,12 @@ app.all('*', (req, res, next) => {
     res.status(404).render('error', { statusCode: 404, message: 'Page not found.' });
 })
 
+
 //Error Handling
 app.use((err, req, res, next) => {
     console.log(err);
     res.status(500).render('error', { statusCode: 500, message: 'Something went wrong.' });
 });
+
 
 app.listen(3000, () => console.log(`Listening on port 3000...`));
